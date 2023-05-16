@@ -11,6 +11,7 @@ use rand::prelude::SliceRandom;
     - Start command, and with --no-limit user has unlimited number of guesses
     - Tests
     - Put the code into multiple files
+    - Packing the thing into a container
 */
 
 
