@@ -1,0 +1,111 @@
+use colored::*;
+use std::fs::File;
+use std::io::{self, BufRead, BufReader};
+use rand::prelude::SliceRandom;
+
+
+/* 
+    Features missing: 
+    - One word for each day, same word cant be present n days in a row.
+    - Only one words per day
+    - Start command, and with --no-limit user has unlimited number of guesses
+    - Tests
+*/
+
+
+
+fn main() {
+    println!("Welcome to Wordle!");
+
+    let words: Vec<String> = read_words_from_file("./../output.txt").expect("Failed to get a words.");
+    let hidden_word: String = pick_random_word(&words).expect("Failed to get hidden word");
+    let mut guessed_words: Vec<String> = vec![];
+    
+
+    while guessed_words.len() < 5 {
+        let guesses_left: usize = 5 - guessed_words.len();
+        println!("Guess the word ({} guesses remaining):", guesses_left);
+        let mut user_input: String = String::new();
+        let guessed_word: String;
+        io::stdin()
+            .read_line(&mut user_input)
+            .expect("Failed to read input.");
+
+        guessed_word = user_input.trim().to_lowercase();
+
+
+        /* 
+
+            This could be improved.
+            Maybe a validity check functions ..? 
+
+        */
+
+        if guessed_word.len() < 5 {
+            println!("{} - Your word is too short!", guessed_word.bright_red());
+            continue;
+        }
+
+        if guessed_word.len() > 5 {
+            println!("{} - Your word is too long!", guessed_word.bright_red());
+            continue;
+        }
+        
+        if !is_real_word(&words, &guessed_word) {
+            println!("{} - Invalid word, try another one!", guessed_word.bright_red());
+            continue;
+        }
+
+        if guessed_words.contains(&guessed_word.to_string()) {
+            println!("{} - You already guessed this word, try another one", guessed_word.bright_red());
+            continue;
+        }
+
+        if guessed_word == hidden_word {
+            println!("{}", guessed_word.green());
+            println!("Congratulations! You guessed the word!");
+            break;
+        } else {
+            let mut colored_word: String = String::new();
+            for (guessed_char, hidden_char) in guessed_word.chars().zip(hidden_word.chars()) {
+                if guessed_char == hidden_char {
+                    colored_word.push_str(&guessed_char.to_string().bright_green().to_string());
+                } else if hidden_word.contains(guessed_char) {
+                    colored_word.push_str(&guessed_char.to_string().bright_yellow().to_string());
+                } else {
+                    colored_word.push_str(&guessed_char.to_string());
+                }
+            }
+            println!("{}", colored_word);
+            guessed_words.push(guessed_word)
+        }
+    }
+
+    if guessed_words.len() == 5 {
+        println!("Game over! You ran out of guesses.");
+        println!("The correct word was: {}", hidden_word.bright_cyan());
+    }
+}
+
+fn read_words_from_file(file_path: &str) -> io::Result<Vec<String>> {
+    let file: File = File::open(file_path)?;
+    let reader: BufReader<File> = BufReader::new(file);
+
+    let words: Vec<String> = reader.lines().map(|line: Result<String, io::Error>| line.unwrap()).collect();
+    Ok(words)
+}
+
+fn pick_random_word(words: &[String]) -> Option<String> {
+    let mut rng: rand::rngs::ThreadRng = rand::thread_rng();
+    words.choose(&mut rng).cloned()
+}
+
+fn is_real_word<'a>(words: &'a [String], guessed_word: &str) -> bool {
+    for word in words {
+        if word == guessed_word {
+            return true;
+        }
+    }
+    false
+}
+
