@@ -30,6 +30,16 @@ The current state of the hidden word with the guessed letters filled in will be 
 
 If the player correctly guesses the word, the game ends. However, if the player fails to guess the word within the five turns, the game ends and the player loses.
 
+## Optinal start up parameters
+
+`--no-limit`
+
+User infinite guesses
+
+`--random`
+
+Uses random word instead of the current day's word
+
 ## License
 
 The Wordle game is distributed under the MIT license. See the [LICENSE](https://opensource.org/licenses/MIT) file for more details.
