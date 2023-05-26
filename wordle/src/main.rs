@@ -7,8 +7,6 @@ use std::io::{self, BufRead, BufReader};
 
 /*
     Features missing:
-    - Only one words per day
-    - Start command, and with --no-limit user has unlimited number of guesses
     - Tests
     - Put the code into multiple files
     - Packing the thing into a container
