@@ -1,11 +1,11 @@
+use chrono::{prelude::*, Duration};
 use colored::*;
+use rand::prelude::SliceRandom;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
-use rand::prelude::SliceRandom;
 
-
-/* 
-    Features missing: 
+/*
+    Features missing:
     - One word for each day, same word cant be present n days in a row.
     - Only one words per day
     - Start command, and with --no-limit user has unlimited number of guesses
@@ -14,15 +14,13 @@ use rand::prelude::SliceRandom;
     - Packing the thing into a container
 */
 
-
-
 fn main() {
     println!("Welcome to Wordle!");
 
-    let words: Vec<String> = read_words_from_file("./../output.txt").expect("Failed to get a words.");
-    let hidden_word: String = pick_random_word(&words).expect("Failed to get hidden word");
+    let words: Vec<String> =
+        read_words_from_file("./../output.txt").expect("Failed to get a words.");
+    let hidden_word: String = pick_word_for_this_day(&words).expect("Failed to get hidden word");
     let mut guessed_words: Vec<String> = vec![];
-    
 
     while guessed_words.len() < 5 {
         let guesses_left: usize = 5 - guessed_words.len();
@@ -35,11 +33,10 @@ fn main() {
 
         guessed_word = user_input.trim().to_lowercase();
 
-
-        /* 
+        /*
 
             This could be improved.
-            Maybe a validity check functions ..? 
+            Maybe a validity check functions ..?
 
         */
 
@@ -52,14 +49,20 @@ fn main() {
             println!("{} - Your word is too long!", guessed_word.bright_red());
             continue;
         }
-        
+
         if !is_real_word(&words, &guessed_word) {
-            println!("{} - Invalid word, try another one!", guessed_word.bright_red());
+            println!(
+                "{} - Invalid word, try another one!",
+                guessed_word.bright_red()
+            );
             continue;
         }
 
         if guessed_words.contains(&guessed_word.to_string()) {
-            println!("{} - You already guessed this word, try another one", guessed_word.bright_red());
+            println!(
+                "{} - You already guessed this word, try another one",
+                guessed_word.bright_red()
+            );
             continue;
         }
 
@@ -93,7 +96,10 @@ fn read_words_from_file(file_path: &str) -> io::Result<Vec<String>> {
     let file: File = File::open(file_path)?;
     let reader: BufReader<File> = BufReader::new(file);
 
-    let words: Vec<String> = reader.lines().map(|line: Result<String, io::Error>| line.unwrap()).collect();
+    let words: Vec<String> = reader
+        .lines()
+        .map(|line: Result<String, io::Error>| line.unwrap())
+        .collect();
     Ok(words)
 }
 
@@ -111,3 +117,14 @@ fn is_real_word<'a>(words: &'a [String], guessed_word: &str) -> bool {
     false
 }
 
+fn pick_word_for_this_day(words: &Vec<String>) -> Option<String> {
+    let utc: DateTime<Utc> = Utc::now();
+    let mut formatted_utc: DateTime<Utc> = utc;
+    formatted_utc = formatted_utc + Duration::days(1);
+    formatted_utc = formatted_utc - Duration::seconds(utc.second().into());
+    formatted_utc = formatted_utc - Duration::minutes(utc.minute().into());
+    formatted_utc = formatted_utc - Duration::hours(utc.hour().into());
+    formatted_utc = formatted_utc - Duration::nanoseconds(utc.nanosecond().into());
+    let index: usize = formatted_utc.timestamp() as usize % words.len();
+    return words.get(index).cloned();
+}
