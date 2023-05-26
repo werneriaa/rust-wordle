@@ -7,8 +7,6 @@ use std::io::{self, BufRead, BufReader};
 
 /*
     Features missing:
-    - Tests
-    - Put the code into multiple files
     - Packing the thing into a container
 */
 
