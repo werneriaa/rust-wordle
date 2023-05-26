@@ -49,6 +49,11 @@ run program:
 
 `docker run -it wordle:latest {params}`
 
+## Running tests
+
+Run tests with command:
+`cargo test`
+
 ## License
 
 The Wordle game is distributed under the MIT license. See the [LICENSE](https://opensource.org/licenses/MIT) file for more details.
