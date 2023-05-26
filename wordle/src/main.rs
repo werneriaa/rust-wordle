@@ -148,3 +148,104 @@ fn is_guess_valid(guessed_word: &str, words: &[String], guessed_words: &Vec<Stri
     }
     return true;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_check_for_no_limit() {
+        // Test when params contains "--no-limit"
+        let params = vec!["--no-limit".to_string(), "some_param".to_string()];
+        assert_eq!(check_for_no_limit(&params), true);
+
+        // Test when params does not contain "--no-limit"
+        let params = vec!["other_param".to_string(), "another_param".to_string()];
+        assert_eq!(check_for_no_limit(&params), false);
+    }
+
+    #[test]
+    fn test_check_for_random_word() {
+        // Test when params contains "--random"
+        let params = vec!["--random".to_string(), "some_param".to_string()];
+        assert_eq!(check_for_random_word(&params), true);
+
+        // Test when params does not contain "--random"
+        let params = vec!["other_param".to_string(), "another_param".to_string()];
+        assert_eq!(check_for_random_word(&params), false);
+    }
+    #[test]
+    fn test_is_guess_valid_valid_word() {
+        let words = vec![
+            String::from("apple"),
+            String::from("juice"),
+            String::from("grape"),
+            String::from("mango"),
+            String::from("berry"),
+        ];
+        let guessed_words = vec![String::from("juice"), String::from("apple")];
+        let guessed_word = "grape";
+
+        assert!(is_guess_valid(guessed_word, &words, &guessed_words));
+    }
+
+    #[test]
+    fn test_is_guess_valid_short_word() {
+        let words = vec![
+            String::from("apple"),
+            String::from("juice"),
+            String::from("grape"),
+            String::from("mango"),
+            String::from("berry"),
+        ];
+        let guessed_words = vec![String::from("juice"), String::from("apple")];
+        let guessed_word = "hey";
+
+        assert!(!is_guess_valid(guessed_word, &words, &guessed_words));
+    }
+
+    #[test]
+    fn test_is_guess_valid_long_word() {
+        let words = vec![
+            String::from("apple"),
+            String::from("juice"),
+            String::from("grape"),
+            String::from("mango"),
+            String::from("berry"),
+        ];
+        let guessed_words = vec![String::from("juice"), String::from("apple")];
+        let guessed_word = "cherry";
+
+        assert!(!is_guess_valid(guessed_word, &words, &guessed_words));
+    }
+
+    #[test]
+    fn test_is_guess_valid_invalid_word() {
+        let words = vec![
+            String::from("apple"),
+            String::from("juice"),
+            String::from("grape"),
+            String::from("mango"),
+            String::from("berry"),
+        ];
+        let guessed_words = vec![String::from("recap"), String::from("apple")];
+        let guessed_word = "hey";
+
+        assert!(!is_guess_valid(guessed_word, &words, &guessed_words));
+    }
+
+    #[test]
+    fn test_is_guess_valid_duplicate_word() {
+        let words = vec![
+            String::from("apple"),
+            String::from("juice"),
+            String::from("grape"),
+            String::from("mango"),
+            String::from("berry"),
+        ];
+        let guessed_words = vec![String::from("juice"), String::from("apple")];
+        let guessed_word = "juice";
+
+        assert!(!is_guess_valid(guessed_word, &words, &guessed_words));
+    }
+}
