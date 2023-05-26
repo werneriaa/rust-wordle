@@ -1,12 +1,12 @@
 use chrono::{prelude::*, Duration};
 use colored::*;
 use rand::prelude::SliceRandom;
+use std::env;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 
 /*
     Features missing:
-    - One word for each day, same word cant be present n days in a row.
     - Only one words per day
     - Start command, and with --no-limit user has unlimited number of guesses
     - Tests
@@ -16,15 +16,29 @@ use std::io::{self, BufRead, BufReader};
 
 fn main() {
     println!("Welcome to Wordle!");
+    let args: Vec<String> = env::args().collect();
+    let no_limit: bool = check_for_no_limit(&args);
+    let random_word: bool = check_for_random_word(&args);
 
     let words: Vec<String> =
         read_words_from_file("./../output.txt").expect("Failed to get a words.");
-    let hidden_word: String = pick_word_for_this_day(&words).expect("Failed to get hidden word");
+    let hidden_word: String;
+
+    if random_word {
+        hidden_word = pick_random_word(&words).expect("Failed to get hidden word");
+    } else {
+        hidden_word = pick_word_for_this_day(&words).expect("Failed to get hidden word");
+    }
+
     let mut guessed_words: Vec<String> = vec![];
 
-    while guessed_words.len() < 5 {
-        let guesses_left: usize = 5 - guessed_words.len();
-        println!("Guess the word ({} guesses remaining):", guesses_left);
+    while guessed_words.len() < 5 || no_limit {
+        if no_limit {
+            println!("Guess the word (Infinite guesses remaining):")
+        } else {
+            let guesses_left: usize = 5 - guessed_words.len();
+            println!("Guess the word ({} guesses remaining):", guesses_left);
+        }
         let mut user_input: String = String::new();
         let guessed_word: String;
         io::stdin()
@@ -86,7 +100,7 @@ fn main() {
         }
     }
 
-    if guessed_words.len() == 5 {
+    if guessed_words.len() == 5 || no_limit {
         println!("Game over! You ran out of guesses.");
         println!("The correct word was: {}", hidden_word.bright_cyan());
     }
@@ -127,4 +141,14 @@ fn pick_word_for_this_day(words: &Vec<String>) -> Option<String> {
     formatted_utc = formatted_utc - Duration::nanoseconds(utc.nanosecond().into());
     let index: usize = formatted_utc.timestamp() as usize % words.len();
     return words.get(index).cloned();
+}
+
+fn check_for_no_limit(params: &[String]) -> bool {
+    let test_string: String = "--no-limit".to_string();
+    return params.contains(&test_string);
+}
+
+fn check_for_random_word(params: &[String]) -> bool {
+    let test_string: String = "--random".to_string();
+    return params.contains(&test_string);
 }
