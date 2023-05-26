@@ -33,62 +33,32 @@ fn main() {
 
         guessed_word = user_input.trim().to_lowercase();
 
-        /*
 
-            This could be improved.
-            Maybe a validity check functions ..?
-
-        */
-
-        if guessed_word.len() < 5 {
-            println!("{} - Your word is too short!", guessed_word.bright_red());
-            continue;
-        }
-
-        if guessed_word.len() > 5 {
-            println!("{} - Your word is too long!", guessed_word.bright_red());
-            continue;
-        }
-
-        if !is_real_word(&words, &guessed_word) {
-            println!(
-                "{} - Invalid word, try another one!",
-                guessed_word.bright_red()
-            );
-            continue;
-        }
-
-        if guessed_words.contains(&guessed_word.to_string()) {
-            println!(
-                "{} - You already guessed this word, try another one",
-                guessed_word.bright_red()
-            );
-            continue;
-        }
-
-        if guessed_word == hidden_word {
-            println!("{}", guessed_word.green());
-            println!("Congratulations! You guessed the word!");
-            break;
-        } else {
-            let mut colored_word: String = String::new();
-            for (guessed_char, hidden_char) in guessed_word.chars().zip(hidden_word.chars()) {
-                if guessed_char == hidden_char {
-                    colored_word.push_str(&guessed_char.to_string().bright_green().to_string());
-                } else if hidden_word.contains(guessed_char) {
-                    colored_word.push_str(&guessed_char.to_string().bright_yellow().to_string());
-                } else {
-                    colored_word.push_str(&guessed_char.to_string());
+        if is_guess_valid(&guessed_word, &words, &guessed_words) {
+            if guessed_word == hidden_word {
+                println!("{}", guessed_word.green());
+                println!("Congratulations! You guessed the word!");
+                break;
+            } else {
+                let mut colored_word: String = String::new();
+                for (guessed_char, hidden_char) in guessed_word.chars().zip(hidden_word.chars()) {
+                    if guessed_char == hidden_char {
+                        colored_word.push_str(&guessed_char.to_string().bright_green().to_string());
+                    } else if hidden_word.contains(guessed_char) {
+                        colored_word.push_str(&guessed_char.to_string().bright_yellow().to_string());
+                    } else {
+                        colored_word.push_str(&guessed_char.to_string());
+                    }
                 }
+                println!("{}", colored_word);
+                guessed_words.push(guessed_word)
             }
-            println!("{}", colored_word);
-            guessed_words.push(guessed_word)
         }
-    }
-
-    if guessed_words.len() == 5 {
-        println!("Game over! You ran out of guesses.");
-        println!("The correct word was: {}", hidden_word.bright_cyan());
+        
+        if guessed_words.len() == 5 {
+            println!("Game over! You ran out of guesses.");
+            println!("The correct word was: {}", hidden_word.bright_cyan());
+        }
     }
 }
 
@@ -103,10 +73,10 @@ fn read_words_from_file(file_path: &str) -> io::Result<Vec<String>> {
     Ok(words)
 }
 
-fn pick_random_word(words: &[String]) -> Option<String> {
-    let mut rng: rand::rngs::ThreadRng = rand::thread_rng();
-    words.choose(&mut rng).cloned()
-}
+// fn pick_random_word(words: &[String]) -> Option<String> {
+//     let mut rng: rand::rngs::ThreadRng = rand::thread_rng();
+//     words.choose(&mut rng).cloned()
+// }
 
 fn is_real_word<'a>(words: &'a [String], guessed_word: &str) -> bool {
     for word in words {
@@ -127,4 +97,27 @@ fn pick_word_for_this_day(words: &Vec<String>) -> Option<String> {
     formatted_utc = formatted_utc - Duration::nanoseconds(utc.nanosecond().into());
     let index: usize = formatted_utc.timestamp() as usize % words.len();
     return words.get(index).cloned();
+}
+
+fn is_guess_valid(guessed_word: &str, words: &[String], guessed_words: &Vec<String>) -> bool {
+    if guessed_word.len() < 5 {
+        println!("{} - Your word is too short!", guessed_word.bright_red());
+        return false;
+    }
+
+    if guessed_word.len() > 5 {
+        println!("{} - Your word is too long!", guessed_word.bright_red());
+        return false;
+    }
+    
+    if !is_real_word(words, guessed_word) {
+        println!("{} - Invalid word, try another one!", guessed_word.bright_red());
+        return false;
+    }
+
+    if guessed_words.contains(&guessed_word.to_string()) {
+        println!("{} - You already guessed this word, try another one", guessed_word.bright_red());
+        return false;
+    }
+    return true;
 }
