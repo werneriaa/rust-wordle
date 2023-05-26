@@ -40,6 +40,15 @@ User infinite guesses
 
 Uses random word instead of the current day's word
 
+## Running in docker
+
+build image:
+`docker build -t wordle:latest .`
+
+run program:
+
+`docker run -it wordle:latest {params}`
+
 ## License
 
 The Wordle game is distributed under the MIT license. See the [LICENSE](https://opensource.org/licenses/MIT) file for more details.

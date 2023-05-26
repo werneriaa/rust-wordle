@@ -15,6 +15,6 @@ filtered_df = df[df['day'].notna()]
 words = filtered_df['word'].tolist()
 
 # write the words to a text file
-with open('output.txt', 'w') as file:
+with open('./wordle/output.txt', 'w') as file:
     for word in words:
         file.write(word + '\n')

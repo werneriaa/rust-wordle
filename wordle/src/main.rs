@@ -16,8 +16,7 @@ fn main() {
     let no_limit: bool = check_for_no_limit(&args);
     let random_word: bool = check_for_random_word(&args);
 
-    let words: Vec<String> =
-        read_words_from_file("./../output.txt").expect("Failed to get a words.");
+    let words: Vec<String> = read_words_from_file("./output.txt").expect("Failed to get a words.");
     let hidden_word: String;
 
     if random_word {
