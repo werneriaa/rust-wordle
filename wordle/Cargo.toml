@@ -2,8 +2,12 @@
 name = "wordle"
 version = "0.1.0"
 edition = "2021"
+authors = ["Werneri Aarnio <werneri.aarnio@gmail.com>", "Niko Kalliomaa <kallionikomaa@gmail.com>"]
+license = "MIT"
+description = "Terminal based worlde game"
+readme = "README.md"
+repository = "https://github.com/werneriaa/rust-wordle"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 colored = "2.0"
