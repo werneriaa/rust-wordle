@@ -45,60 +45,29 @@ fn main() {
 
         guessed_word = user_input.trim().to_lowercase();
 
-        /*
-
-            This could be improved.
-            Maybe a validity check functions ..?
-
-        */
-
-        if guessed_word.len() < 5 {
-            println!("{} - Your word is too short!", guessed_word.bright_red());
-            continue;
-        }
-
-        if guessed_word.len() > 5 {
-            println!("{} - Your word is too long!", guessed_word.bright_red());
-            continue;
-        }
-
-        if !is_real_word(&words, &guessed_word) {
-            println!(
-                "{} - Invalid word, try another one!",
-                guessed_word.bright_red()
-            );
-            continue;
-        }
-
-        if guessed_words.contains(&guessed_word.to_string()) {
-            println!(
-                "{} - You already guessed this word, try another one",
-                guessed_word.bright_red()
-            );
-            continue;
-        }
-
-        if guessed_word == hidden_word {
-            println!("{}", guessed_word.green());
-            println!("Congratulations! You guessed the word!");
-            break;
-        } else {
-            let mut colored_word: String = String::new();
-            for (guessed_char, hidden_char) in guessed_word.chars().zip(hidden_word.chars()) {
-                if guessed_char == hidden_char {
-                    colored_word.push_str(&guessed_char.to_string().bright_green().to_string());
-                } else if hidden_word.contains(guessed_char) {
-                    colored_word.push_str(&guessed_char.to_string().bright_yellow().to_string());
-                } else {
-                    colored_word.push_str(&guessed_char.to_string());
+        if is_guess_valid(&guessed_word, &words, &guessed_words) {
+            if guessed_word == hidden_word {
+                println!("{}", guessed_word.green());
+                println!("Congratulations! You guessed the word!");
+                break;
+            } else {
+                let mut colored_word: String = String::new();
+                for (guessed_char, hidden_char) in guessed_word.chars().zip(hidden_word.chars()) {
+                    if guessed_char == hidden_char {
+                        colored_word.push_str(&guessed_char.to_string().bright_green().to_string());
+                    } else if hidden_word.contains(guessed_char) {
+                        colored_word
+                            .push_str(&guessed_char.to_string().bright_yellow().to_string());
+                    } else {
+                        colored_word.push_str(&guessed_char.to_string());
+                    }
                 }
+                println!("{}", colored_word);
+                guessed_words.push(guessed_word)
             }
-            println!("{}", colored_word);
-            guessed_words.push(guessed_word)
         }
     }
-
-    if guessed_words.len() == 5 || no_limit {
+    if guessed_words.len() == 5 {
         println!("Game over! You ran out of guesses.");
         println!("The correct word was: {}", hidden_word.bright_cyan());
     }
@@ -149,4 +118,33 @@ fn check_for_no_limit(params: &[String]) -> bool {
 fn check_for_random_word(params: &[String]) -> bool {
     let test_string: String = "--random".to_string();
     return params.contains(&test_string);
+}
+
+fn is_guess_valid(guessed_word: &str, words: &[String], guessed_words: &Vec<String>) -> bool {
+    if guessed_word.len() < 5 {
+        println!("{} - Your word is too short!", guessed_word.bright_red());
+        return false;
+    }
+
+    if guessed_word.len() > 5 {
+        println!("{} - Your word is too long!", guessed_word.bright_red());
+        return false;
+    }
+
+    if !is_real_word(words, guessed_word) {
+        println!(
+            "{} - Invalid word, try another one!",
+            guessed_word.bright_red()
+        );
+        return false;
+    }
+
+    if guessed_words.contains(&guessed_word.to_string()) {
+        println!(
+            "{} - You already guessed this word, try another one",
+            guessed_word.bright_red()
+        );
+        return false;
+    }
+    return true;
 }
