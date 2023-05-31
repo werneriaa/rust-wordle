@@ -13,34 +13,28 @@ use std::io::{self, BufRead, BufReader};
 fn main() {
     println!("Welcome to Wordle!");
     let args: Vec<String> = env::args().collect();
-    let no_limit: bool = check_for_no_limit(&args);
-    let random_word: bool = check_for_random_word(&args);
+    let no_limit: bool = check_for_argument(&args, "--no-limit");
+    let random_word: bool = check_for_argument(&args, "--random");
 
-    let words: Vec<String> = read_words_from_file("./output.txt").expect("Failed to get a words.");
-    let hidden_word: String;
-
-    if random_word {
-        hidden_word = pick_random_word(&words).expect("Failed to get hidden word");
+    let words: Vec<String> = read_words_from_file("./output.txt").expect("Failed to get words.");
+    let hidden_word: String = if random_word {
+        pick_random_word(&words).expect("Failed to get hidden word")
     } else {
-        hidden_word = pick_word_for_this_day(&words).expect("Failed to get hidden word");
-    }
+        pick_word_for_this_day(&words).expect("Failed to get hidden word")
+    };
 
-    let mut guessed_words: Vec<String> = vec![];
+    let mut guessed_words: Vec<String> = Vec::new();
 
     while guessed_words.len() < 5 || no_limit {
         if no_limit {
-            println!("Guess the word (Infinite guesses remaining):")
+            println!("Guess the word (Infinite guesses remaining):");
         } else {
             let guesses_left: usize = 5 - guessed_words.len();
             println!("Guess the word ({} guesses remaining):", guesses_left);
         }
-        let mut user_input: String = String::new();
-        let guessed_word: String;
-        io::stdin()
-            .read_line(&mut user_input)
-            .expect("Failed to read input.");
 
-        guessed_word = user_input.trim().to_lowercase();
+        let user_input = read_user_input().expect("Failed to read input.");
+        let guessed_word = user_input.trim().to_lowercase();
 
         if is_guess_valid(&guessed_word, &words, &guessed_words) {
             if guessed_word == hidden_word {
@@ -48,22 +42,25 @@ fn main() {
                 println!("Congratulations! You guessed the word!");
                 break;
             } else {
-                let mut colored_word: String = String::new();
-                for (guessed_char, hidden_char) in guessed_word.chars().zip(hidden_word.chars()) {
-                    if guessed_char == hidden_char {
-                        colored_word.push_str(&guessed_char.to_string().bright_green().to_string());
-                    } else if hidden_word.contains(guessed_char) {
-                        colored_word
-                            .push_str(&guessed_char.to_string().bright_yellow().to_string());
-                    } else {
-                        colored_word.push_str(&guessed_char.to_string());
-                    }
-                }
+                let colored_word = guessed_word
+                    .chars()
+                    .zip(hidden_word.chars())
+                    .map(|(guessed_char, hidden_char)| {
+                        if guessed_char == hidden_char {
+                            guessed_char.to_string().bright_green().to_string()
+                        } else if hidden_word.contains(guessed_char) {
+                            guessed_char.to_string().bright_yellow().to_string()
+                        } else {
+                            guessed_char.to_string()
+                        }
+                    })
+                    .collect::<String>();
                 println!("{}", colored_word);
-                guessed_words.push(guessed_word)
+                guessed_words.push(guessed_word);
             }
         }
     }
+
     if guessed_words.len() == 5 {
         println!("Game over! You ran out of guesses.");
         println!("The correct word was: {}", hidden_word.bright_cyan());
@@ -74,50 +71,36 @@ fn read_words_from_file(file_path: &str) -> io::Result<Vec<String>> {
     let file: File = File::open(file_path)?;
     let reader: BufReader<File> = BufReader::new(file);
 
-    let words: Vec<String> = reader
-        .lines()
-        .map(|line: Result<String, io::Error>| line.unwrap())
-        .collect();
-    Ok(words)
+    reader.lines().collect::<io::Result<Vec<String>>>()
 }
 
 fn pick_random_word(words: &[String]) -> Option<String> {
-    let mut rng: rand::rngs::ThreadRng = rand::thread_rng();
+    let mut rng = rand::thread_rng();
     words.choose(&mut rng).cloned()
 }
 
-fn is_real_word<'a>(words: &'a [String], guessed_word: &str) -> bool {
-    for word in words {
-        if word == guessed_word {
-            return true;
-        }
-    }
-    false
+fn is_real_word(words: &[String], guessed_word: &str) -> bool {
+    words.contains(&guessed_word.to_string())
 }
 
-fn pick_word_for_this_day(words: &Vec<String>) -> Option<String> {
+fn pick_word_for_this_day(words: &[String]) -> Option<String> {
     let utc: DateTime<Utc> = Utc::now();
-    let mut formatted_utc: DateTime<Utc> = utc;
-    formatted_utc = formatted_utc + Duration::days(1);
-    formatted_utc = formatted_utc - Duration::seconds(utc.second().into());
-    formatted_utc = formatted_utc - Duration::minutes(utc.minute().into());
-    formatted_utc = formatted_utc - Duration::hours(utc.hour().into());
-    formatted_utc = formatted_utc - Duration::nanoseconds(utc.nanosecond().into());
+    let formatted_utc = utc
+        + Duration::days(1)
+        - Duration::seconds(utc.second() as i64)
+        - Duration::minutes(utc.minute() as i64)
+        - Duration::hours(utc.hour() as i64)
+        - Duration::nanoseconds(utc.nanosecond() as i64);
+
     let index: usize = formatted_utc.timestamp() as usize % words.len();
-    return words.get(index).cloned();
+    words.get(index).cloned()
 }
 
-fn check_for_no_limit(params: &[String]) -> bool {
-    let test_string: String = "--no-limit".to_string();
-    return params.contains(&test_string);
+fn check_for_argument(args: &[String], arg: &str) -> bool {
+    args.iter().any(|a| a == arg)
 }
 
-fn check_for_random_word(params: &[String]) -> bool {
-    let test_string: String = "--random".to_string();
-    return params.contains(&test_string);
-}
-
-fn is_guess_valid(guessed_word: &str, words: &[String], guessed_words: &Vec<String>) -> bool {
+fn is_guess_valid(guessed_word: &str, words: &[String], guessed_words: &[String]) -> bool {
     if guessed_word.len() < 5 {
         println!("{} - Your word is too short!", guessed_word.bright_red());
         return false;
@@ -143,8 +126,17 @@ fn is_guess_valid(guessed_word: &str, words: &[String], guessed_words: &Vec<Stri
         );
         return false;
     }
-    return true;
+
+    true
 }
+
+fn read_user_input() -> io::Result<String> {
+    let mut user_input = String::new();
+    io::stdin().read_line(&mut user_input)?;
+    Ok(user_input.trim().to_lowercase())
+}
+
+
 
 #[cfg(test)]
 mod tests {
@@ -152,24 +144,24 @@ mod tests {
 
     #[test]
     fn test_check_for_no_limit() {
-        // Test when params contains "--no-limit"
-        let params = vec!["--no-limit".to_string(), "some_param".to_string()];
-        assert_eq!(check_for_no_limit(&params), true);
+        // Test when args contains "--no-limit"
+        let args = vec!["--no-limit".to_string()];
+        assert_eq!(check_for_argument(&args, "--no-limit"), true);
 
-        // Test when params does not contain "--no-limit"
-        let params = vec!["other_param".to_string(), "another_param".to_string()];
-        assert_eq!(check_for_no_limit(&params), false);
+        // Test when args does not contain "--no-limit"
+        let args = vec!["other_arg".to_string(), "another_arg".to_string()];
+        assert_eq!(check_for_argument(&args, "--no-limit"), false);
     }
 
     #[test]
     fn test_check_for_random_word() {
-        // Test when params contains "--random"
-        let params = vec!["--random".to_string(), "some_param".to_string()];
-        assert_eq!(check_for_random_word(&params), true);
+        // Test when args contains "--random"
+        let args = vec!["--random".to_string()];
+        assert_eq!(check_for_argument(&args, "--random"), true);
 
-        // Test when params does not contain "--random"
-        let params = vec!["other_param".to_string(), "another_param".to_string()];
-        assert_eq!(check_for_random_word(&params), false);
+        // Test when args does not contain "--random"
+        let args = vec!["other_arg".to_string(), "another_arg".to_string()];
+        assert_eq!(check_for_argument(&args, "--random"), false);
     }
     #[test]
     fn test_is_guess_valid_valid_word() {

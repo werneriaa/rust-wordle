@@ -32,11 +32,11 @@ If the player correctly guesses the word, the game ends. However, if the player 
 
 ## Optinal start up parameters
 
-`--no-limit`
+`cargo run -- --no-limit`
 
 User infinite guesses
 
-`--random`
+`cargo run -- --random`
 
 Uses random word instead of the current day's word
 
